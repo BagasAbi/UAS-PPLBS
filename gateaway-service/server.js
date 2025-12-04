@@ -1,9 +1,27 @@
 const express = require('express');
 const axios = require('axios');
+const cors = require('cors'); // Tambahkan ini
 const app = express();
 const PORT = 3000;
-
+ 
 app.use(express.json());
+app.use(cors()); // Izinkan semua domain akses (untuk dev)
+
+// --- MOCK DATABASE (Sederhana) ---
+const USERS = {
+    "admin": "password123"
+};
+
+// --- ENDPOINT LOGIN ---
+app.post('/api/login', (req, res) => {
+    const { username, password } = req.body;
+    if (USERS[username] && USERS[username] === password) {
+        // Di real world, return JWT Token di sini
+        res.json({ status: "success", token: "dummy-token-123", role: "admin" });
+    } else {
+        res.status(401).json({ error: "Username atau password salah" });
+    }
+});
 
 // URL Service Python (Asumsi jalan di localhost port 5000)
 const AI_SERVICE_URL = 'http://127.0.0.1:5000/predict';
@@ -15,54 +33,60 @@ const MOCK_STOCK_DB = {
     "Home and lifestyle": 100
 };
 
+// --- ENDPOINT LIST PRODUK ---
+// Agar frontend bisa bikin dropdown menu
+app.get('/api/products', (req, res) => {
+    res.json(Object.keys(MOCK_STOCK_DB));
+});
+
+// --- ENDPOINT SMART RESTOCK ---
 app.post('/api/smart-restock', async (req, res) => {
     try {
-        const { product_line } = req.body; // Input dari Postman
+        // Frontend mengirim 'product_line', ini harus konsisten
+        const { product_line } = req.body;
 
-        // 1. Cek Stok Saat Ini (Simulasi ambil dari Stock Service)
-        const currentStock = MOCK_STOCK_DB[product_line] || 0;
-        console.log(`[Gateway] Stok saat ini untuk ${product_line}: ${currentStock}`);
-
-        // 2. Minta Prediksi Permintaan ke AI Service
-        console.log(`[Gateway] Meminta prediksi ke AI...`);
-        const aiResponse = await axios.post(AI_SERVICE_URL, { product_line });
-        const predictedDemand = aiResponse.data.predicted_demand_7_days;
+        if (!product_line) {
+            return res.status(400).json({ error: "product_line harus diisi" });
+        }
         
-        console.log(`[Gateway] Prediksi permintaan 7 hari ke depan: ${predictedDemand}`);
-
-        // 3. Logika Bisnis: Tentukan Risiko & Keputusan Restock
-        let riskLevel = "Low";
-        let restockNeeded = 0;
-        let action = "No Action";
-
-        if (predictedDemand > currentStock) {
-            riskLevel = "High (Stockout Imminent)";
-            restockNeeded = predictedDemand - currentStock;
-            action = "Restock Immediately";
-        } else if (predictedDemand > (currentStock * 0.8)) {
-            riskLevel = "Medium";
-            restockNeeded = Math.max(0, predictedDemand - currentStock + 10); // Buffer 10
-            action = "Prepare Restock";
+        const current_stock = MOCK_STOCK_DB[product_line];
+        if (current_stock === undefined) {
+            return res.status(404).json({ error: "Produk tidak ditemukan di MOCK_STOCK_DB" });
         }
 
-        // 4. Kirim Hasil ke Client (Postman)
-        res.json({
-            status: "success",
-            data: {
-                product: product_line,
-                current_stock: currentStock,
-                ai_forecast_7_days: predictedDemand,
-                analysis: {
-                    risk_level: riskLevel,
-                    shortage_estimation: restockNeeded > 0 ? `Kurang ${restockNeeded} unit` : "Stok Aman",
-                    recommendation: action
-                }
-            }
+        // FIX 1: Panggil ke port 5000 dan gunakan 'product_line'
+        const predictionResponse = await axios.post('http://127.0.0.1:5000/predict', {
+            product_line: product_line 
         });
 
+        const predictionData = predictionResponse.data;
+        const forecast = predictionData.predicted_demand_7_days || 0;
+        const shortage = Math.max(0, forecast - current_stock);
+
+        // FIX 2: Susun objek yang kompleks sesuai harapan frontend
+        const responseForFrontend = {
+            product: product_line,
+            current_stock: current_stock,
+            ai_forecast_7_days: forecast,
+            analysis: {
+                risk_level: shortage > current_stock ? "High" : (shortage > 0 ? "Medium" : "Low"),
+                recommendation: `Untuk menutupi prediksi permintaan (${forecast} unit), disarankan untuk restock minimal ${shortage} unit.`,
+                shortage_estimation: shortage
+            }
+        };
+
+        res.json(responseForFrontend);
+
     } catch (error) {
-        console.error("Error:", error.message);
-        res.status(500).json({ error: "Gagal memproses smart restock" });
+        // Beri pesan error yang lebih jelas
+        let errorMessage = "Gagal menghubungi prediction service.";
+        if (error.code === 'ECONNREFUSED') {
+            errorMessage = "Koneksi ke prediction service (port 5000) ditolak. Pastikan service tersebut sudah berjalan."
+        } else if (error.response) {
+            errorMessage = `Prediction service error: ${error.response.data.error || 'Unknown error'}`;
+        }
+        console.error("Error detail:", error.message);
+        res.status(500).json({ error: errorMessage });
     }
 });
 

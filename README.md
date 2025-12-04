@@ -33,7 +33,7 @@ cd gateaway-service
 npm install
 
 # Jalankan server
-npm start
+node server.js
 ```
 
 ### 2. Prediction Service
@@ -70,41 +70,46 @@ python app.py
 
 *(Instruksi untuk layanan ini belum dibuat)*
 
+## Cara Mencoba Layanan
+
+Setelah semua layanan yang diperlukan berjalan, Anda dapat mulai berinteraksi dengan sistem melalui **Gateway Service**.
+
+Secara default, Gateway Service akan berjalan di `http://localhost:3000` (port ini mungkin perlu dikonfigurasi). Anda dapat menggunakan alat seperti [Postman](https://www.postman.com/) atau `curl` untuk mengirim permintaan ke gateway.
+
+**Contoh Permintaan (hipotetis):**
+
+- **Mendapatkan Prediksi Permintaan:**
+  ```bash
+  curl -X POST http://localhost:3000/api/predict -H "Content-Type: application/json" -d '{"productId": "123", "days": 30}'
+  ```
+
+- **Menambahkan Produk Baru:**
+  ```bash
+  curl -X POST http://localhost:3000/api/products -H "Content-Type: application/json" -d '{"name": "Produk Baru", "price": 50000}'
+  ```
+
+*Catatan: Endpoint dan payload di atas adalah contoh dan mungkin perlu disesuaikan dengan implementasi aktual di Gateway Service.*
+
+## Berkontribusi
+
+Kami sangat menyambut kontribusi dari komunitas! Jika Anda ingin membantu mengembangkan AI-Inventory-System, silakan ikuti panduan berikut:
+
+1.  **Fork Repositori:** Buat *fork* dari repositori ini ke akun GitHub Anda.
+2.  **Buat Branch Baru:** Buat *branch* baru untuk fitur atau perbaikan yang sedang Anda kerjakan.
+    ```bash
+    git checkout -b nama-fitur-anda
+    ```
+3.  **Lakukan Perubahan:** Buat perubahan atau penambahan kode Anda. Pastikan untuk mengikuti gaya kode yang sudah ada.
+4.  **Commit Perubahan:** Commit perubahan Anda dengan pesan yang jelas dan deskriptif.
+    ```bash
+    git commit -m "feat: Menambahkan fitur X yang luar biasa"
+    ```
+5.  **Push ke Branch:** Push perubahan Anda ke *branch* di repositori *fork* Anda.
+    ```bash
+    git push origin nama-fitur-anda
+    ```
+6.  **Buat Pull Request:** Buka repositori utama di GitHub dan buat *Pull Request* (PR) dari *branch* Anda. Jelaskan perubahan yang Anda buat dan mengapa perubahan itu diperlukan.
+
+Tim kami akan meninjau PR Anda sesegera mungkin. Terima kasih telah berkontribusi!
+
 ---
-
-## Cara Berkontribusi ke GitHub
-
-Setelah Anda membuat repositori baru di situs GitHub, ikuti langkah-langkah ini untuk mengirim kode Anda.
-
-1.  **Inisialisasi Git (jika belum):**
-    ```bash
-    git init
-    ```
-
-2.  **Tambahkan semua file ke Git:**
-    ```bash
-    git add .
-    ```
-
-3.  **Buat commit pertama Anda:**
-    ```bash
-    git commit -m "Initial commit: Setup project structure and services"
-    ```
-
-4.  **Hubungkan repositori lokal Anda dengan repositori di GitHub:**
-    *(Ganti `URL_REPO_ANDA` dengan URL repositori GitHub yang telah Anda buat)*
-    ```bash
-    git remote add origin URL_REPO_ANDA
-    ```
-
-5.  **Ganti nama branch utama menjadi `main` (jika perlu):**
-    ```bash
-    git branch -M main
-    ```
-
-6.  **Push kode Anda ke GitHub:**
-    ```bash
-    git push -u origin main
-    ```
-
-Setelah itu, teman Anda dapat melakukan `git clone URL_REPO_ANDA` untuk mengunduh proyek dan mulai berkontribusi.
