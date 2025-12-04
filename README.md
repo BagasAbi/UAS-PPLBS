@@ -1,2 +1,0 @@
-# UAS-PPLBS
-project UAS SERVICE
