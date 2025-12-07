@@ -68,7 +68,26 @@ python app.py
 
 ### 5. Stock Service
 
-*(Instruksi untuk layanan ini belum dibuat)*
+```bash
+# Masuk ke direktori layanan
+cd stock-service
+
+# Instal dependensi Node.js
+npm install
+
+# (Opsional) Salin file .env.example menjadi .env lalu sesuaikan isinya
+# cp .env.example .env
+# Untuk Windows (PowerShell) bisa gunakan:
+# copy .env.example .env
+
+# Pastikan file .env sudah terisi SUPABASE_URL, SUPABASE_KEY, dan PORT
+# Contoh:
+# SUPABASE_URL=https://xxxxx.supabase.co
+# SUPABASE_KEY=SERVICE_ROLE_KEY_ANDA
+# PORT=3002
+
+# Jalankan aplikasi
+npm start
 
 ## Cara Mencoba Layanan
 
