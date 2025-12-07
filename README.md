@@ -75,39 +75,29 @@ cd stock-service
 # Instal dependensi Node.js
 npm install
 
-# (Opsional) Salin file .env.example menjadi .env lalu sesuaikan isinya
+# (Opsional) Salin file .env.example menjadi .env lalu sesuaikan nilainya
 # cp .env.example .env
-# Untuk Windows (PowerShell) bisa gunakan:
+# Untuk Windows (PowerShell):
 # copy .env.example .env
-
-# Pastikan file .env sudah terisi SUPABASE_URL, SUPABASE_KEY, dan PORT
-# Contoh:
-# SUPABASE_URL=https://xxxxx.supabase.co
-# SUPABASE_KEY=SERVICE_ROLE_KEY_ANDA
-# PORT=3002
 
 # Jalankan aplikasi
 npm start
+```
 
-## Cara Mencoba Layanan
+Service akan berjalan pada:
 
-Setelah semua layanan yang diperlukan berjalan, Anda dapat mulai berinteraksi dengan sistem melalui **Gateway Service**.
+```
+http://localhost:3002
+```
 
-Secara default, Gateway Service akan berjalan di `http://localhost:3000` (port ini mungkin perlu dikonfigurasi). Anda dapat menggunakan alat seperti [Postman](https://www.postman.com/) atau `curl` untuk mengirim permintaan ke gateway.
+Jika ingin menjalankan menggunakan Docker:
 
-**Contoh Permintaan (hipotetis):**
-
-- **Mendapatkan Prediksi Permintaan:**
-  ```bash
-  curl -X POST http://localhost:3000/api/predict -H "Content-Type: application/json" -d '{"productId": "123", "days": 30}'
-  ```
-
-- **Menambahkan Produk Baru:**
-  ```bash
-  curl -X POST http://localhost:3000/api/products -H "Content-Type: application/json" -d '{"name": "Produk Baru", "price": 50000}'
-  ```
-
-*Catatan: Endpoint dan payload di atas adalah contoh dan mungkin perlu disesuaikan dengan implementasi aktual di Gateway Service.*
+```bash
+docker build -t stock-service .
+docker stop stock-service || true
+docker rm stock-service || true
+docker run -d --name stock-service -p 3002:3002 --env-file .env stock-service
+```
 
 ## Berkontribusi
 
