@@ -1,0 +1,17 @@
+{
+  "name": "sales-service-orang2",
+  "version": "0.1.0",
+  "description": "Sales Service (Orang 2) - handles sales ingestion and aggregation, Supabase-backed",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.0.0",
+    "dotenv": "^16.0.0",
+    "express": "^4.18.2",
+    "node-fetch": "^2.6.7",
+    "dayjs": "^1.11.9"
+  }
+}
