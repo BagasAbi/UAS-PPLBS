@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import './App.css'; // Boleh pakai CSS bawaan atau kosongkan
+import './App.css';
 
 function App() {
   const [token, setToken] = useState(null);
@@ -10,23 +10,23 @@ function App() {
   const [selectedProduct, setSelectedProduct] = useState('');
   const [prediction, setPrediction] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [userRole, setUserRole] = useState(null); // Simpan role user
+  const [salesQty, setSalesQty] = useState(1);
 
-  // Ganti URL ini jika backend jalan di port lain
   const GATEWAY_URL = 'http://localhost:3000/api';
 
-  // --- FUNGSI LOGIN ---
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
       const res = await axios.post(`${GATEWAY_URL}/login`, { username, password });
       setToken(res.data.token);
-      fetchProducts(); // Ambil data produk setelah login
+      setUserRole(res.data.role); // Simpan role dari backend
+      fetchProducts();
     } catch (err) {
       alert('Login Gagal! Cek username/password.');
     }
   };
 
-  // --- AMBIL LIST PRODUK ---
   const fetchProducts = async () => {
     try {
       const res = await axios.get(`${GATEWAY_URL}/products`);
@@ -37,7 +37,6 @@ function App() {
     }
   };
 
-  // --- MINTA PREDIKSI ---
   const handlePredict = async () => {
     setLoading(true);
     setPrediction(null);
@@ -51,8 +50,25 @@ function App() {
     }
     setLoading(false);
   };
+  
+  const handleTransaction = async () => {
+    try {
+        const res = await axios.post(`${GATEWAY_URL}/transaction`, {
+            product_name: selectedProduct,
+            quantity: parseInt(salesQty),
+            sales_person: username
+        });
+        alert(`Sukses! Stok tersisa: ${res.data.remaining_stock}`);
+    } catch (err) {
+        alert(err.response?.data?.error || "Transaksi Gagal");
+    }
+  };
 
-  // --- TAMPILAN LOGIN ---
+  const logout = () => {
+    setToken(null);
+    setUserRole(null);
+  }
+
   if (!token) {
     return (
       <div className="login-container">
@@ -72,55 +88,75 @@ function App() {
     );
   }
 
-  // --- TAMPILAN DASHBOARD ---
   return (
     <div className="dashboard-container">
       <header className="dashboard-header">
-        <h1>📦 Smart Restocking Dashboard</h1>
-        <button onClick={() => setToken(null)} className="logout-button">Logout</button>
+        <h1>{userRole === 'admin' ? '📦 Admin Dashboard' : '🛒 Sales Point'}</h1>
+        <button onClick={logout} className="logout-button">Logout</button>
       </header>
 
-      <div className="prediction-section">
-        <h3>🤖 AI Demand Prediction</h3>
-        <p>Pilih kategori produk untuk melihat prediksi permintaan minggu depan.</p>
-        
-        <div className="prediction-controls">
-          <select 
-            value={selectedProduct} 
-            onChange={e => setSelectedProduct(e.target.value)}
-          >
+      {/* --- FITUR KHUSUS SALES --- */}
+      {userRole === 'sales' && (
+        <div className="prediction-section card-sales">
+          <h3>Input Penjualan Baru</h3>
+          <label>Produk:</label>
+          <select value={selectedProduct} onChange={e => setSelectedProduct(e.target.value)}>
             {products.map(p => <option key={p} value={p}>{p}</option>)}
           </select>
           
-          <button onClick={handlePredict} disabled={loading}>
-            {loading ? 'Menganalisis...' : 'Analisis Stok'}
-          </button>
-        </div>
-      </div>
-
-      {prediction && (
-        <div className="analysis-result">
-          <h2>📊 Hasil Analisis: {prediction.product}</h2>
+          <label>Jumlah Terjual:</label>
+          <input type="number" value={salesQty} onChange={e => setSalesQty(e.target.value)} />
           
-          <div className="stats-grid">
-            <div className="stat-card">
-              <h4>Stok Saat Ini</h4>
-              <p className="stat-value">{prediction.current_stock} Unit</p>
-            </div>
-            <div className="stat-card">
-              <h4>Prediksi Permintaan (7 Hari)</h4>
-              <p className="stat-value forecast">
-                {prediction.ai_forecast_7_days} Unit
-              </p>
+          <button onClick={handleTransaction} style={{background: 'green', marginTop: '10px'}}>Catat Penjualan</button>
+        </div>
+      )}
+
+      {/* --- FITUR KHUSUS ADMIN (AI PREDICTION) --- */}
+      {userRole === 'admin' && (
+        <div className="card-admin">
+           <div className="prediction-section">
+            <h3>🤖 AI Demand Prediction</h3>
+            <p>Pilih kategori produk untuk melihat prediksi permintaan minggu depan.</p>
+            
+            <div className="prediction-controls">
+              <select 
+                value={selectedProduct} 
+                onChange={e => setSelectedProduct(e.target.value)}
+              >
+                {products.map(p => <option key={p} value={p}>{p}</option>)}
+              </select>
+              
+              <button onClick={handlePredict} disabled={loading}>
+                {loading ? 'Menganalisis...' : 'Analisis Stok'}
+              </button>
             </div>
           </div>
 
-          <div className="recommendation">
-            <h4>⚠️ Rekomendasi AI:</h4>
-            <p><strong>Status Risiko:</strong> {prediction.analysis.risk_level}</p>
-            <p><strong>Saran:</strong> {prediction.analysis.recommendation}</p>
-            <p><strong>Estimasi Kekurangan:</strong> {prediction.analysis.shortage_estimation}</p>
-          </div>
+          {prediction && (
+            <div className="analysis-result">
+              <h2>📊 Hasil Analisis: {prediction.product}</h2>
+              
+              <div className="stats-grid">
+                <div className="stat-card">
+                  <h4>Stok Saat Ini</h4>
+                  <p className="stat-value">{prediction.current_stock} Unit</p>
+                </div>
+                <div className="stat-card">
+                  <h4>Prediksi Permintaan (7 Hari)</h4>
+                  <p className="stat-value forecast">
+                    {prediction.ai_forecast_7_days} Unit
+                  </p>
+                </div>
+              </div>
+
+              <div className="recommendation">
+                <h4>⚠️ Rekomendasi AI:</h4>
+                <p><strong>Status Risiko:</strong> {prediction.analysis.risk_level}</p>
+                <p><strong>Saran:</strong> {prediction.analysis.recommendation}</p>
+                <p><strong>Estimasi Kekurangan:</strong> {prediction.analysis.shortage_estimation}</p>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
