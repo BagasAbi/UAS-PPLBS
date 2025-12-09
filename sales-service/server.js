@@ -5,7 +5,7 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 
 const app = express();
-const PORT = 3003; // Port for sales-service
+const PORT = 4000; // Port for sales-service
 
 app.use(cors());
 app.use(bodyParser.json());

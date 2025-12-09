@@ -9,7 +9,7 @@ app.use(bodyParser());
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 app.use('/sales', salesRoutes);
 
-const PORT = process.env.PORT || 3003;
+const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
   console.log(`Sales Service listening on port ${PORT}`);
 });
