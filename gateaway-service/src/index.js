@@ -1,4 +1,5 @@
 require('dotenv').config();
+const supabase = require('./supabaseClient.js');
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
@@ -23,14 +24,6 @@ createProxy(app);
 setupFrontend(app);
 
 // --- Menjalankan Server ---
-app.listen(port, async () => {
-    const url = `http://localhost:${port}`;
-    console.log(`API Gateway listening on ${url}`);
-    try {
-        // Secara dinamis mengimpor 'open' dan membuka browser
-        const { default: open } = await import('open');
-        await open(url);
-    } catch (err) {
-        console.error('Failed to open browser:', err);
-    }
+app.listen(port, () => {
+    console.log(`API Gateway listening on port ${port}`);
 });
