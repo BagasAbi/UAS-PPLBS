@@ -1,4 +1,4 @@
-# Sales Service (Orang 2)
+# Sales Service
 
 Backend service untuk **penyimpanan data penjualan** dan **agregasi time-series** (siap untuk ML).
 
@@ -240,7 +240,3 @@ curl http://localhost:4000/sales/aggregate?product_id=1&window=7d
 - Hanya support **POST** dan **GET** operation (tidak ada PUT/DELETE sesuai requirement).
 - Python import script dirancang untuk dataset supermarket_sales dari Kaggle.
 - Semua timestamp disimpan dalam UTC (ISO 8601 format).
-
-## Author
-
-Orang 2 (Sales Service Developer)
