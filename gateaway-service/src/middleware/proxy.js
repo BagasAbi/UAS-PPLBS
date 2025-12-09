@@ -3,16 +3,16 @@ const { authenticateToken } = require('./auth');
 
 const services = [
     { name: 'products', route: '/api/products', target: process.env.PRODUCT_SERVICE_URL, rewrite: '/products' },
-    { name: 'sales', route: '/api/sales', target: process.env.SALES_SERVICE_URL, rewrite: '/api' },
+    { name: 'sales', route: '/api/sales', target: process.env.SALES_SERVICE_URL, rewrite: '/sales' },
     { name: 'stock', route: '/api/stock', target: process.env.STOCK_SERVICE_URL, rewrite: '/stock' },
     { name: 'predict', route: '/api/predict', target: process.env.PREDICTION_SERVICE_URL, rewrite: '/predict' },
 ];
 
 const serviceAccessRules = {
-    '/api/products': ['admin', 'staff_gudang', 'staff_sales'], // Sesuaikan peran yang benar
-    '/api/sales':    ['admin', 'staff_sales'],
-    '/api/stock':    ['admin', 'admin_gudang'],
-    '/api/predict':  ['admin', 'admin_gudang'],
+    '/api/products': ['manager', 'staff', 'user'],
+    '/api/sales': ['manager', 'staff', 'user'], // User might need to buy (POST)
+    '/api/stock': ['manager', 'staff'],
+    '/api/predict': ['manager'],
 };
 
 function createAuthProxyDecorator(allowedRoles) {
@@ -21,13 +21,21 @@ function createAuthProxyDecorator(allowedRoles) {
             // 1. Lakukan Otentikasi
             authenticateToken(proxyReqOpts, srcReq)
                 .then(newOpts => {
-                    // 2. Lakukan Otorisasi (setelah otentikasi berhasil dan srcReq.user ada)
-                    if (!srcReq.user || !allowedRoles.includes(srcReq.user.role)) {
+                    const user = srcReq.user;
+                    // 2. Lakukan Otorisasi
+                    if (!user || !allowedRoles.includes(user.role)) {
                         return reject(new Error('Forbidden: You do not have the required role.'));
                     }
-                    resolve(newOpts); // Sukses, lanjutkan ke proxy
+
+                    // 3. Aturan Khusus untuk Role 'user' (Pembeli)
+                    // User hanya boleh GET data produk, tidak boleh ubah/hapus
+                    if (user.role === 'user' && srcReq.originalUrl.startsWith('/api/products') && srcReq.method !== 'GET') {
+                        return reject(new Error('Forbidden: Buyers can only view products.'));
+                    }
+
+                    resolve(newOpts);
                 })
-                .catch(reject); // Gagal otentikasi, tolak
+                .catch(reject);
         });
     };
 }
@@ -49,7 +57,7 @@ function createProxy(app) {
             },
             // PENTING: Gunakan decorator gabungan yang baru
             proxyReqOptDecorator: createAuthProxyDecorator(allowedRoles),
-            proxyErrorHandler: function(err, res, next) {
+            proxyErrorHandler: function (err, res, next) {
                 console.error(`[PROXY ERROR] Code: ${err.code}, Message: ${err.message}`);
                 if (res.headersSent) {
                     return;

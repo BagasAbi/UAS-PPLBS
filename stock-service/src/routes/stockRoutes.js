@@ -5,6 +5,9 @@ const stockController = require('../controllers/stockController');
 // catat pergerakan stok (restock, sale, adjustment, dll)
 router.post('/stock/move', stockController.postStockMove);
 
+// dapatkan semua stok
+router.get('/stock', stockController.getAllStocks);
+
 // dapatkan stok terkini per produk
 router.get('/stock/:product_id', stockController.getStockByProduct);
 

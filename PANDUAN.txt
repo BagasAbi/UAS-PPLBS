@@ -1,0 +1,128 @@
+PANDUAN MENJALANKAN AI INVENTORY SYSTEM
+=========================================
+
+Dokumen ini berisi langkah-langkah detail untuk menjalankan dan menguji proyek Anda secara lokal.
+
+1. PERSIAPAN LINGKUNGAN (Environment Variables)
+-----------------------------------------------
+Sebelum menjalankan, pastikan setiap service memiliki file .env dengan kredensial Supabase Anda. Anda perlu mendapatkan SUPABASE_URL dan SUPABASE_KEY dari dashboard Supabase Anda.
+
+Buat file .env di setiap folder service berikut:
+
+a. product-service/.env
+   PORT=3001
+   SUPABASE_URL=your_supabase_url
+   SUPABASE_KEY=your_supabase_key
+
+b. sales-service/.env
+   PORT=4000
+   SUPABASE_URL=your_supabase_url
+   SUPABASE_KEY=your_supabase_key
+   STOCK_SERVICE_URL=http://localhost:3002
+
+c. stock-service/.env
+   PORT=3002
+   SUPABASE_URL=your_supabase_url
+   SUPABASE_KEY=your_supabase_key
+
+d. prediction-service/.env
+   SUPABASE_URL=your_supabase_url
+   SUPABASE_KEY=your_supabase_key
+
+e. gateaway-service/.env
+   PORT=8000
+   FRONTEND_URL=http://localhost:5173
+   PRODUCT_SERVICE_URL=http://localhost:3001
+   SALES_SERVICE_URL=http://localhost:4000
+   STOCK_SERVICE_URL=http://localhost:3002
+   PREDICTION_SERVICE_URL=http://localhost:5000
+
+---
+
+2. LANGKAH-LANGKAH MENJALANKAN (Cara Manual / Lokal)
+----------------------------------------------------
+Anda perlu membuka 6 Terminal yang berbeda (satu untuk setiap service).
+
+Terminal 1: Gateway Service
+   > cd "gateaway-service"
+   > npm install
+   > node server.js
+   (Berjalan di: http://localhost:8000)
+
+Terminal 2: Prediction Service (AI)
+   > cd "prediction-service"
+   > python -m venv venv
+   > venv\Scripts\activate   (Windows)
+   > pip install -r requirements.txt
+   > python app.py
+   (Berjalan di: http://localhost:5000)
+
+Terminal 3: Product Service
+   > cd "product-service"
+   > npm install
+   > node server.js
+   (Berjalan di: http://localhost:3001)
+
+Terminal 4: Sales Service
+   > cd "sales-service"
+   > npm install
+   > npm start
+   (Berjalan di: http://localhost:4000)
+
+Terminal 5: Stock Service
+   > cd "stock-service"
+   > npm install
+   > npm start
+   (Berjalan di: http://localhost:3002)
+
+Terminal 6: Frontend Dashboard
+   > cd "frontend-dashboard"
+   > npm install
+   > npm run dev
+   (Berjalan di: http://localhost:5173)
+
+---
+
+3. CARA PENGUJIAN (Testing)
+---------------------------
+
+A. Testing via Browser (Manual Test UI)
+   1. Buka browser ke: http://localhost:5173
+   2. Login dan coba fitur dashboard.
+
+B. Testing via Postman (Integration Test)
+   Gunakan URL Gateway (http://localhost:8000).
+
+   Contoh URL:
+   - Login: POST http://localhost:8000/login
+   - Produk: GET http://localhost:8000/api/products
+   - Stok: GET http://localhost:8000/api/stock
+   - Prediksi: POST http://localhost:8000/api/predict
+
+---
+
+4. MENJALANKAN DENGAN DOCKER (Cara Otomatis)
+--------------------------------------------
+Daripada membuka 6 terminal, Anda bisa menggunakan Docker Compose.
+
+Langkah:
+1. Pastikan Docker Desktop berjalan.
+2. Buka terminal di folder utama proyek.
+3. Jalankan: docker-compose up --build
+4. Akses Frontend di http://localhost:5173.
+5. Akses Swagger UI di http://localhost:8000/api-docs.
+
+---
+
+5. KUBERNETES (K8s) - Opsional / Advanced
+-----------------------------------------
+Folder k8s/ telah disiapkan untuk deployment di Minikube menggunakan NodePort.
+
+Langkah (Minikube):
+1. minikube start
+2. minikube -p minikube docker-env --shell powershell | Invoke-Expression
+3. docker-compose build
+4. kubectl apply -f k8s/configmap.yaml
+5. Edit & apply secrets: kubectl apply -f k8s/secrets.yaml
+6. Deploy app: kubectl apply -f k8s/
+7. Akses via IP Minikube port 30001 (Gateway) atau 30002 (Frontend).

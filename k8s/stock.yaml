@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stock-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: stock-service
+  template:
+    metadata:
+      labels:
+        app: stock-service
+    spec:
+      containers:
+        - name: stock-service
+          image: stock-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3002
+          env:
+            - name: PORT
+              value: "3002"
+            - name: SUPABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: SUPABASE_URL
+            - name: SUPABASE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: SUPABASE_KEY
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: stock-service
+spec:
+  selector:
+    app: stock-service
+  ports:
+    - protocol: TCP
+      port: 3002
+      targetPort: 3002
+  type: ClusterIP

@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  gateway-service:
+    build: ./gateaway-service
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./gateaway-service/.env
+    environment:
+      - PRODUCT_SERVICE_URL=http://product-service:3001
+      - SALES_SERVICE_URL=http://sales-service:4000
+      - STOCK_SERVICE_URL=http://stock-service:3002
+      - PREDICTION_SERVICE_URL=http://prediction-service:5000
+    depends_on:
+      - product-service
+      - sales-service
+      - stock-service
+      - prediction-service
+
+  product-service:
+    build: ./product-service
+    ports:
+      - "3001:3001"
+    env_file:
+      - ./product-service/.env
+
+  stock-service:
+    build: ./stock-service
+    ports:
+      - "3002:3002"
+    env_file:
+      - ./stock-service/.env
+
+  sales-service:
+    build: ./sales-service
+    ports:
+      - "4000:4000"
+    env_file:
+      - ./sales-service/.env
+    environment:
+      - STOCK_SERVICE_URL=http://stock-service:3002
+
+  prediction-service:
+    build: ./prediction-service
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./prediction-service/.env
+
+  frontend-dashboard:
+    build: ./frontend-dashboard
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_GATEWAY_API_URL=http://localhost:8000
+    volumes:
+      - ./frontend-dashboard/src:/app/src

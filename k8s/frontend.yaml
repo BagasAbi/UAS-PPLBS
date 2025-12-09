@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-dashboard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend-dashboard
+  template:
+    metadata:
+      labels:
+        app: frontend-dashboard
+    spec:
+      containers:
+        - name: frontend-dashboard
+          image: ai-inventory-system-frontend-dashboard:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5173
+          env:
+            - name: VITE_GATEWAY_API_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: VITE_GATEWAY_API_URL
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-dashboard
+spec:
+  selector:
+    app: frontend-dashboard
+  ports:
+    - protocol: TCP
+      port: 5173
+      targetPort: 5173
+      nodePort: 30002 # Fix Port agar mudah diakses
+  type: NodePort

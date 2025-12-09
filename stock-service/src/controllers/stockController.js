@@ -68,6 +68,20 @@ async function getStockByProduct(req, res) {
 }
 
 /**
+ * GET /stock
+ * Mengembalikan semua data stok produk
+ */
+async function getAllStocks(req, res) {
+  try {
+    const products = await stockService.getAllStocks();
+    res.status(200).json(products);
+  } catch (err) {
+    console.error('Error getAllStocks:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+}
+
+/**
  * GET /stock/:product_id/movements
  * Opsional: lihat history pergerakan stok
  */
@@ -94,5 +108,6 @@ async function getStockMovements(req, res) {
 module.exports = {
   postStockMove,
   getStockByProduct,
+  getAllStocks,
   getStockMovements
 };

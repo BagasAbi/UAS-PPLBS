@@ -86,6 +86,21 @@ async function getCurrentStock(productId) {
 }
 
 /**
+ * Get all stocks (list of products with their stock)
+ */
+async function getAllStocks() {
+  const { data, error } = await supabase
+    .from('products')
+    .select('id, name, current_stock');
+
+  if (error) {
+    console.error('Error getAllStocks from products:', error);
+    throw error;
+  }
+  return data || [];
+}
+
+/**
  * History movement masih dari stock_movements
  */
 async function getStockMovements(productId) {
@@ -107,5 +122,6 @@ async function getStockMovements(productId) {
 module.exports = {
   createStockMovement,
   getCurrentStock,
+  getAllStocks,
   getStockMovements
 };

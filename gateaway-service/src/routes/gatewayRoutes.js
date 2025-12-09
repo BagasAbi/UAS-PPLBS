@@ -20,7 +20,8 @@ router.post('/auth/google', gatewayController.handleGoogleLogin);
 // Registration endpoint (simple): client provides email/password/name and receives JWT
 router.post('/register', registerLimiter, [
 	body('email').isEmail().withMessage('Valid email required'),
-	body('password').isLength({ min: 6 }).withMessage('Password min 6 characters')
+	body('password').isLength({ min: 6 }).withMessage('Password min 6 characters'),
+	body('role').optional().isIn(['user', 'staff', 'manager']).withMessage('Invalid role'),
 ], gatewayController.registerUser);
 
 // Protected user info endpoint
@@ -28,7 +29,7 @@ router.get('/me', verifyBackendToken, gatewayController.me);
 
 // Admin endpoint: change user's role
 router.patch('/users/:id/role', verifyBackendToken, requireRole('admin'), [
-	body('role').isIn(['admin','owner','staff','user']).withMessage('Invalid role')
+	body('role').isIn(['admin', 'owner', 'staff', 'user']).withMessage('Invalid role')
 ], gatewayController.setUserRole);
 
 module.exports = router;

@@ -33,3 +33,9 @@ MANIFEST
 .env.development.local
 .env.test.local
 .env.production.local
+
+# Kubernetes Secrets
+k8s/secrets.yaml
+
+# Large Files / Models
+*.pkl

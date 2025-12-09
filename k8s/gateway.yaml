@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gateway-service
+  template:
+    metadata:
+      labels:
+        app: gateway-service
+    spec:
+      containers:
+        - name: gateway-service
+          # Ganti imagePullPolicy ke Never atau IfNotPresent
+          # Agar K8s menggunakan image yang kita build di lokal (minikube docker-env)
+          image: ai-inventory-system-gateway-service:latest 
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+          env:
+            - name: PORT
+              value: "8000"
+            - name: SUPABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: SUPABASE_URL
+            - name: SUPABASE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: SUPABASE_KEY
+            - name: BACKEND_JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: BACKEND_JWT_SECRET
+            # Load URLs from ConfigMap
+            - name: PRODUCT_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: PRODUCT_SERVICE_URL
+            - name: SALES_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: SALES_SERVICE_URL
+            - name: STOCK_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: STOCK_SERVICE_URL
+            - name: PREDICTION_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: PREDICTION_SERVICE_URL
+            - name: FRONTEND_URL
+              value: "*" 
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gateway-service
+spec:
+  selector:
+    app: gateway-service
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000
+      nodePort: 30001 # Fix Port agar mudah diakses
+  type: NodePort

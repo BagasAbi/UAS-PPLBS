@@ -5,12 +5,21 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const cors = require('cors');
 const morgan = require('morgan');
+// Swagger Dependencies
+const swaggerUi = require('swagger-ui-express');
+const YAML = require('yamljs');
+const path = require('path');
+
 const { createProxy } = require('./middleware/proxy');
 const { setupFrontend } = require('./middleware/frontend');
 const gatewayRoutes = require('./routes/gatewayRoutes');
 
 const app = express();
 const port = process.env.PORT || 8000;
+
+// Swagger Setup
+const swaggerDocument = YAML.load(path.join(__dirname, '../swagger.yaml'));
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // --- Middleware Global ---
 app.use(helmet());

@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sales-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sales-service
+  template:
+    metadata:
+      labels:
+        app: sales-service
+    spec:
+      containers:
+        - name: sales-service
+          image: sales-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 4000
+          env:
+            - name: PORT
+              value: "4000"
+            - name: STOCK_SERVICE_URL
+              value: "http://stock-service:3002"
+            - name: SUPABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: SUPABASE_URL
+            - name: SUPABASE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: SUPABASE_KEY
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sales-service
+spec:
+  selector:
+    app: sales-service
+  ports:
+    - protocol: TCP
+      port: 4000
+      targetPort: 4000
+  type: ClusterIP

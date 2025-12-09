@@ -14,6 +14,18 @@ router.post('/', async (req, res) => {
   }
 });
 
+// Alias for /transaction (legacy support)
+router.post('/transaction', async (req, res) => {
+  try {
+    const payload = req.body;
+    const result = await salesService.createSale(payload);
+    res.status(201).json(result);
+  } catch (err) {
+    console.error('Error creating sale transaction', err);
+    res.status(500).json({ error: 'failed to create sale', details: err.message });
+  }
+});
+
 // GET /sales - list sales, optional ?product_id=...
 router.get('/', async (req, res) => {
   try {

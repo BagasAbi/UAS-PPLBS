@@ -14,12 +14,24 @@ function Dashboard() {
 
   useEffect(() => {
     // Prefer backend-issued token stored in localStorage
+    // Prefer backend-issued token stored in localStorage
     const backendToken = localStorage.getItem('backend_token');
     if (backendToken) {
-      // Minimal client-side session info
-      const email = localStorage.getItem('backend_user_email') || '';
-      setSession({ user: { email } });
-      setUserMetadata({ role: 'user' });
+      // Decode token to get role (simple base64 decode for frontend display)
+      try {
+        const payload = JSON.parse(atob(backendToken.split('.')[1]));
+        const email = payload.email || localStorage.getItem('backend_user_email') || '';
+        const role = payload.role || 'user';
+
+        setSession({ user: { email } });
+        setUserMetadata({ role: role });
+      } catch (e) {
+        console.error("Failed to decode token:", e);
+        // Fallback if decode fails
+        const email = localStorage.getItem('backend_user_email') || '';
+        setSession({ user: { email } });
+        setUserMetadata({ role: 'user' });
+      }
       setLoading(false);
       return;
     }
@@ -83,7 +95,7 @@ function Dashboard() {
 
   const fetchProtectedData = async () => {
     setApiData(null);
-    setApiError(null);    
+    setApiError(null);
     try {
       // Use the centralized service function to fetch data
       const data = await fetchProducts();
@@ -95,7 +107,7 @@ function Dashboard() {
   };
 
   if (loading) {
-    return <div>Loading...</div>; // Or a more sophisticated loading spinner
+    return <div>Memuat...</div>; // Or a more sophisticated loading spinner
   }
 
   return (
@@ -106,17 +118,17 @@ function Dashboard() {
           <div>
             <p>Selamat datang, {session.user.email}!</p>
             {userMetadata?.role && <p>Peran Anda: {userMetadata.role}</p>}
-            <button onClick={handleLogout} style={{ padding: '10px 20px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', marginRight: '10px' }}>Logout</button>
+            <button onClick={handleLogout} style={{ padding: '10px 20px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', marginRight: '10px' }}>Keluar</button>
             <hr style={{ margin: '20px 0' }} />
             <button onClick={fetchProtectedData} style={{ padding: '10px 20px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>Ambil Data Produk (Terproteksi)</button>
-            
+
             {apiData && (
               <div style={{ textAlign: 'left', marginTop: '20px', backgroundColor: '#333', padding: '15px', borderRadius: '8px', color: 'white' }}>
                 <h3>Data Produk:</h3>
                 <pre>{JSON.stringify(apiData, null, 2)}</pre>
               </div>
             )}
-             {apiError && (
+            {apiError && (
               <div style={{ marginTop: '20px', color: 'red', backgroundColor: 'rgba(255,0,0,0.1)', padding: '10px', borderRadius: '5px' }}>
                 <p><strong>Error:</strong> {apiError}</p>
               </div>

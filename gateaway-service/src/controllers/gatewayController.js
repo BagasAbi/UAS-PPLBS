@@ -104,7 +104,7 @@ async function handleGoogleLogin(req, res) {
             }
 
             userId = authData.user.id; // Get Supabase's internal user ID
-            
+
             // Insert into our custom 'user' table with 'id', 'email', 'name', 'role'
             const { data: newUser, error: insertError } = await supabase
                 .from('user')
@@ -124,7 +124,7 @@ async function handleGoogleLogin(req, res) {
             name: googleName,
             role: userRole, // Now can be from custom table or default
         };
-        
+
         // Sign with the same BACKEND_JWT_SECRET used elsewhere for consistency
         const backendToken = jwt.sign({ sub: appUser.id, email: appUser.email, role: appUser.role }, process.env.BACKEND_JWT_SECRET, { expiresIn: '7d' });
 
@@ -174,7 +174,9 @@ async function registerUser(req, res) {
         // Create user record in Supabase custom table (not Supabase Auth)
         const id = uuidv4();
         const password_hash = await bcrypt.hash(password, 10);
-        const role = 'user';
+
+        // Use role from request or default to 'user'
+        const role = req.body.role || 'user';
 
         // Build payload dynamically so we only send fields that exist.
         const insertPayload = { id, email, password_hash, role };

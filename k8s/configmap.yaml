@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  # Internal Service URLs (ClusterDNS)
+  PRODUCT_SERVICE_URL: "http://product-service:3001"
+  SALES_SERVICE_URL: "http://sales-service:4000"
+  STOCK_SERVICE_URL: "http://stock-service:3002"
+  PREDICTION_SERVICE_URL: "http://prediction-service:5000"
+  # Gateway URL for Frontend (Browser -> Gateway)
+  # Di local K8s (NodePort), ini nanti akan diganti dengan IP Minikube/Node
+  # Untuk default kita set localhost dulu
+  VITE_GATEWAY_API_URL: "http://localhost:30001" 

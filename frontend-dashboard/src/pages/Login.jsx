@@ -37,7 +37,7 @@ function Login() {
   const handleGoogleLoginSuccess = async (credentialResponse) => {
     setError('');
     setLoading(true);
-    
+
     // Let Supabase handle the Google Sign-In
     const { data, error } = await supabase.auth.signInWithIdToken({
       provider: 'google',
@@ -78,13 +78,13 @@ function Login() {
       console.error('Failed to exchange ID token at gateway:', e);
       setError(e.message || 'Failed to obtain backend token from gateway');
     }
-    
+
     setLoading(false);
   };
 
   return (
     <div style={{ maxWidth: '400px', margin: '50px auto', padding: '20px', border: '1px solid #ccc', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-      <h2>Login</h2>
+      <h2>Masuk (Login)</h2>
       {error && <p style={{ color: 'red' }}>{error}</p>}
       <form onSubmit={handleEmailLogin}>
         <div style={{ marginBottom: '15px' }}>
@@ -110,11 +110,11 @@ function Login() {
           />
         </div>
         <button type="submit" disabled={loading} style={{ width: '100%', padding: '10px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
-          {loading ? 'Loading...' : 'Login with Email'}
+          {loading ? 'Memuat...' : 'Masuk dengan Email'}
         </button>
       </form>
       <div style={{ marginTop: '20px', textAlign: 'center' }}>
-        <p>OR</p>
+        <p>ATAU</p>
         <GoogleLogin
           onSuccess={handleGoogleLoginSuccess}
           onError={() => {
@@ -124,7 +124,7 @@ function Login() {
         />
       </div>
       <p style={{ marginTop: '20px', textAlign: 'center' }}>
-        Don't have an account? <Link to="/register">Register here</Link>
+        Belum punya akun? <Link to="/register">Daftar di sini</Link>
       </p>
     </div>
   );
