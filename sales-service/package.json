@@ -1,7 +1,7 @@
 {
-  "name": "sales-service-orang2",
+  "name": "sales-service",
   "version": "0.1.0",
-  "description": "Sales Service (Orang 2) - handles sales ingestion and aggregation, Supabase-backed",
+  "description": "Sales Service - handles sales ingestion and aggregation, Supabase-backed",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",

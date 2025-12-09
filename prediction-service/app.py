@@ -2,20 +2,26 @@ from flask import Flask, request, jsonify
 from supabase import create_client, Client
 import pandas as pd
 from sklearn.ensemble import RandomForestRegressor
+import joblib # Tambahkan ini untuk menyimpan/memuat model
 import numpy as np
 import datetime # Import datetime ditaruh di atas biar rapi
+import os
+from dotenv import load_dotenv
+import time # Untuk mengukur waktu
+
+load_dotenv() # Memuat variabel dari file .env
 
 app = Flask(__name__)
 
 # ==============================================================================
 # 1. KONFIGURASI SUPABASE
 # ==============================================================================
-url = "https://sqeprcowwnbivpnkdumu.supabase.co"
+url = os.getenv("SUPABASE_URL")
+key = os.getenv("SUPABASE_KEY")
 
-# ⚠️ PENTING: GANTI KEY DI BAWAH INI
-# Jangan pakai "sb_publishable_..." (Itu untuk Frontend/Browser)
-# Pakai Key yang awalan "ey..." (Cari di Supabase > Settings > API > anon public)
-key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxZXByY293d25iaXZwbmtkdW11Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ4MzUzMzgsImV4cCI6MjA4MDQxMTMzOH0.pQ3mAAHYQrASNy0svLwoA1VdGN4j0_bnpCq4bguLt7Y"
+if not url or not key:
+    raise EnvironmentError("SUPABASE_URL and SUPABASE_KEY must be set in the .env file")
+
 
 print(f"Mencoba koneksi ke: {url}")
 
@@ -68,31 +74,52 @@ def get_training_data():
 # ==============================================================================
 # 3. TRAINING MODEL (Jalan otomatis saat aplikasi start)
 # ==============================================================================
-print("\n--- Memulai Proses Training ---")
-df = get_training_data()
-models = {}
+MODEL_FILE = 'models.pkl'
+models = {} # Inisialisasi variabel models
 
-if not df.empty and 'date_ordinal' in df.columns:
-    # Kita buat model terpisah untuk setiap 'Product Line'
-    product_lines = df['product_line'].unique()
-
-    for product in product_lines:
-        product_df = df[df['product_line'] == product]
-        
-        if len(product_df) > 5: # Minimal 5 data baru boleh training
-            X = product_df[['date_ordinal']] # Input: Tanggal (Angka)
-            y = product_df['quantity']       # Target: Jumlah Terjual
-            
-            regr = RandomForestRegressor(max_depth=2, random_state=0)
-            regr.fit(X, y)
-            models[product] = regr
-            print(f"   -> Model dilatih untuk: {product}")
-        else:
-            print(f"   -> Skip: {product} (Data terlalu sedikit)")
-
-    print(f"✅ Selesai! {len(models)} model siap digunakan.")
+# Cek apakah file model sudah ada
+if os.path.exists(MODEL_FILE):
+    print(f"✅ File model '{MODEL_FILE}' ditemukan. Memuat model...")
+    start_time = time.time()
+    models = joblib.load(MODEL_FILE)
+    end_time = time.time()
+    print(f"✅ Selesai! {len(models)} model dimuat dalam {end_time - start_time:.2f} detik.")
 else:
-    print("❌ TIDAK ADA MODEL YANG DILATIH (Cek koneksi data).")
+    print(f"⚠️ File model '{MODEL_FILE}' tidak ditemukan. Memulai proses training dari awal...")
+    print("\n--- Memulai Proses Training ---")
+    start_time = time.time()
+    df = get_training_data()
+
+    if not df.empty and 'date_ordinal' in df.columns:
+        # Kita buat model terpisah untuk setiap 'Product Line'
+        product_lines = df['product_line'].unique()
+
+        for product in product_lines:
+            product_df = df[df['product_line'] == product]
+            
+            if len(product_df) > 5: # Minimal 5 data baru boleh training
+                X = product_df[['date_ordinal']] # Input: Tanggal (Angka)
+                y = product_df['quantity']       # Target: Jumlah Terjual
+                
+                regr = RandomForestRegressor(max_depth=2, random_state=0)
+                regr.fit(X, y)
+                models[product] = regr
+                print(f"   -> Model dilatih untuk: {product}")
+            else:
+                print(f"   -> Skip: {product} (Data terlalu sedikit)")
+
+        end_time = time.time()
+        print(f"✅ Selesai! {len(models)} model dilatih dalam {end_time - start_time:.2f} detik.")
+
+        # Simpan model yang sudah dilatih ke file
+        if models:
+            print(f"💾 Menyimpan model ke '{MODEL_FILE}'...")
+            joblib.dump(models, MODEL_FILE)
+            print("💾 Model berhasil disimpan.")
+
+    else:
+        print("❌ TIDAK ADA MODEL YANG DILATIH (Cek koneksi data).")
+
 
 # ==============================================================================
 # 4. API ENDPOINT
