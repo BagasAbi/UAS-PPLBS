@@ -25,11 +25,12 @@ RUN pip install --no-cache-dir -r /app/requirements.txt
 COPY . /app
 
 # Expose the port the app runs on
-EXPOSE 8000
+EXPOSE 8888
 
 # Healthcheck (optional) — checks the docs page
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s \
-  CMD curl -f http://127.0.0.1:8000/docs || exit 1
+  CMD curl -f http://127.0.0.1:8888/docs || exit 1
 
 # Start the app with uvicorn (recommended for dev). For production, use gunicorn + uvicorn workers.
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8888"]
+
