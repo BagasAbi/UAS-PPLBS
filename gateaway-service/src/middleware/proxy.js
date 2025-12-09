@@ -9,7 +9,7 @@ const services = [
 ];
 
 const serviceAccessRules = {
-    '/api/products': ['admin', 'admin_gudang', 'staff_sales'],
+    '/api/products': ['admin', 'admin_gudang', 'staff_sales', 'user'],
     '/api/sales':    ['admin', 'staff_sales'],
     '/api/stock':    ['admin', 'admin_gudang'],
     '/api/predict':  ['admin', 'admin_gudang'],
