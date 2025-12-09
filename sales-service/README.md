@@ -45,8 +45,8 @@ sales-service/
    Edit `.env` dan isi:
    - `SUPABASE_URL` – URL project Supabase lu
    - `SUPABASE_KEY` – Public/Service key Supabase
-   - `STOCK_SERVICE_URL` (opsional) – URL Stock Service (contoh: `http://localhost:4001`) untuk notifikasi saat ada penjualan
-   - `PORT` (opsional, default `4000`)
+   - `STOCK_SERVICE_URL` (opsional) – URL Stock Service (contoh: `http://localhost:3002`) untuk notifikasi saat ada penjualan
+   - `PORT` (opsional, default `3003`)
 
 3. **Jalankan server:**
    ```bash
@@ -209,7 +209,7 @@ Tabel `products` dan `stock_movements` sudah ada dan dipakai oleh Stock Service,
 ### Test POST /sales
 
 ```bash
-curl -X POST http://localhost:4000/sales \
+curl -X POST http://localhost:3003/sales \
   -H "Content-Type: application/json" \
   -d '{
     "product_id": 1,
@@ -221,22 +221,16 @@ curl -X POST http://localhost:4000/sales \
 ### Test GET /sales
 
 ```bash
-curl http://localhost:4000/sales
+curl http://localhost:3003/sales
 ```
 
 ### Test GET /sales/aggregate
 
 ```bash
-curl http://localhost:4000/sales/aggregate?product_id=1&window=7d
+curl http://localhost:3003/sales/aggregate?product_id=1&window=7d
 ```
 
 ## Integrasi dengan Service Lain
 
 - **Stock Service**: Kalau `STOCK_SERVICE_URL` diset, membuat penjualan otomatis notify Stock Service untuk kurangin stok via `POST /stock/move`. Lihat `src/services/salesService.js` untuk detail implementasi.
 - **ML Forecasting Service**: Gunakan `GET /sales/aggregate` untuk fetch historical sales data untuk time-series prediction.
-
-## Catatan
-
-- Hanya support **POST** dan **GET** operation (tidak ada PUT/DELETE sesuai requirement).
-- Python import script dirancang untuk dataset supermarket_sales dari Kaggle.
-- Semua timestamp disimpan dalam UTC (ISO 8601 format).

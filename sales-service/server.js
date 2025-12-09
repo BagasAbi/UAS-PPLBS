@@ -5,7 +5,7 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 
 const app = express();
-const PORT = 3002; // Port for sales-service
+const PORT = 3003; // Port for sales-service
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -13,7 +13,7 @@ app.use(bodyParser.json());
 const { createClient } = require('@supabase/supabase-js');
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
-const STOCK_SERVICE_URL = 'http://localhost:3003';
+const STOCK_SERVICE_URL = 'http://localhost:3002';
 
 app.post('/api/transaction', async (req, res) => {
     const { product_name, quantity, sales_person } = req.body;
