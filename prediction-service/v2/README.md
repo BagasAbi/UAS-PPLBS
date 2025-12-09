@@ -18,9 +18,9 @@ docker build -t uas_service .
 
 docker run -p 8888:8888 uas_service
 
-### API Endpoint
+## API Endpoint
 
-## POST /ml/forecast
+### POST /ml/forecast
 
 Request body:
 
@@ -43,24 +43,24 @@ json
 }
 
 ## Code Notes
-# Forecast uses RandomForest models loaded from:
+### Forecast uses RandomForest models loaded from:
 
 /models/model_<product_id>.pkl
 
-# Sales history loaded from:
+### Sales history loaded from:
 
 /sales.csv
 
-# Current stock fetched dynamically from:
+### Current stock fetched dynamically from:
 
 GET http://localhost:3002/stock/:product_id
 
 ## Local Development (without Docker)
 
-# Install deps:
+### Install deps:
 
 pip install -r requirements.txt
 
-# Run service:
+### Run service:
 
 uvicorn app:app --reload --host 0.0.0.0 --port 8888
