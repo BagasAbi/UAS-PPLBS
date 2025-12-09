@@ -6,5 +6,12 @@ export default defineConfig({
   plugins: [react()],
   server: {
     open: false,
+    configureServer: (server) => {
+      server.middlewares.use((req, res, next) => {
+        res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+        next();
+      });
+    },
+
   },
 })

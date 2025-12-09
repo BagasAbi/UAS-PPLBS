@@ -8,12 +8,11 @@ function setupFrontend(app) {
     // Sajikan file statis dari direktori tersebut
     app.use(express.static(frontendDistPath));
 
-    // "Catch-all" handler: untuk permintaan yang tidak cocok dengan file statis atau rute API,
-    // kirim kembali 'index.html'. Ini penting untuk Single-Page-Application (SPA).
-    app.get('*', (req, res) => {
-        // Pastikan path ini benar berdasarkan struktur direktori Anda
+    // Fungsi ini akan digunakan sebagai "catch-all" di file index.js
+    const spaFallback = (req, res, next) => {
         res.sendFile(path.join(frontendDistPath, 'index.html'));
-    });
+    };
+    return spaFallback;
 }
 
 module.exports = {

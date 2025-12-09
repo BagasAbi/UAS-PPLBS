@@ -2,16 +2,29 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import '../App.css'; // Assuming App.css has general styling
+import { fetchProducts } from '../pages/api.js'; // Use absolute path alias
 
 function Dashboard() {
   const [session, setSession] = useState(null);
   const [userMetadata, setUserMetadata] = useState(null);
   const [apiData, setApiData] = useState(null);
   const [apiError, setApiError] = useState(null);
-  const [loading, setLoading] = useState(false); // Add this line
+  const [loading, setLoading] = useState(true); // Start with loading true until session is checked
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Prefer backend-issued token stored in localStorage
+    const backendToken = localStorage.getItem('backend_token');
+    if (backendToken) {
+      // Minimal client-side session info
+      const email = localStorage.getItem('backend_user_email') || '';
+      setSession({ user: { email } });
+      setUserMetadata({ role: 'user' });
+      setLoading(false);
+      return;
+    }
+
+    // Fallback to Supabase session if backend token not present
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session) {
@@ -19,6 +32,7 @@ function Dashboard() {
       } else {
         navigate('/login'); // Redirect to login if no session
       }
+      setLoading(false); // Stop loading after session check
     });
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
@@ -36,12 +50,24 @@ function Dashboard() {
     );
 
     return () => {
-      authListener.subscription.unsubscribe();
+      if (authListener && authListener.subscription) authListener.subscription.unsubscribe();
     };
   }, [navigate]);
 
   const handleLogout = async () => {
-    setLoading(true);
+    // Remove backend token if present
+    const backendToken = localStorage.getItem('backend_token');
+    if (backendToken) {
+      localStorage.removeItem('backend_token');
+      localStorage.removeItem('backend_user_email');
+      setSession(null);
+      setUserMetadata(null);
+      setApiData(null);
+      navigate('/login');
+      return;
+    }
+
+    // Otherwise sign out Supabase session
     const { error } = await supabase.auth.signOut();
     if (error) {
       console.error('Error during logout:', error.message);
@@ -53,34 +79,14 @@ function Dashboard() {
       setApiData(null);
       navigate('/login'); // Redirect to login after successful logout
     }
-    setLoading(false); // Make sure loading state is reset
   };
 
   const fetchProtectedData = async () => {
     setApiData(null);
-    setApiError(null);
-
-    if (!session?.access_token) {
-      setApiError("Anda harus login untuk mengambil data.");
-      return;
-    }
-
+    setApiError(null);    
     try {
-      // NOTE: This call will still fail until the gateway-service is updated to validate Supabase JWTs.
-      // This is a placeholder for demonstrating the client-side part.
-      const res = await fetch('http://localhost:8000/api/products', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.message || "Gagal mengambil data yang dilindungi.");
-      }
-      
+      // Use the centralized service function to fetch data
+      const data = await fetchProducts();
       setApiData(data);
     } catch (error) {
       console.error("Error saat mengambil data:", error);
@@ -88,7 +94,7 @@ function Dashboard() {
     }
   };
 
-  if (!session) {
+  if (loading) {
     return <div>Loading...</div>; // Or a more sophisticated loading spinner
   }
 
@@ -96,7 +102,7 @@ function Dashboard() {
     <div className="App">
       <header className="App-header">
         <h1>Dashboard Sistem Inventaris AI</h1>
-        {session.user ? (
+        {session && session.user ? (
           <div>
             <p>Selamat datang, {session.user.email}!</p>
             {userMetadata?.role && <p>Peran Anda: {userMetadata.role}</p>}

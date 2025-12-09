@@ -14,47 +14,71 @@ function Login() {
     e.preventDefault();
     setError('');
     setLoading(true);
+    try {
+      const res = await fetch(`${import.meta.env.VITE_GATEWAY_API_URL || 'http://localhost:8000'}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || JSON.stringify(data));
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      setError(error.message);
-    } else {
+      // Save backend token
+      localStorage.setItem('backend_token', data.token);
+      localStorage.setItem('backend_user_email', email);
       navigate('/');
+    } catch (err) {
+      setError(err.message || 'Login failed');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleGoogleLoginSuccess = async (credentialResponse) => {
     setError('');
     setLoading(true);
+    
+    // Let Supabase handle the Google Sign-In
+    const { data, error } = await supabase.auth.signInWithIdToken({
+      provider: 'google',
+      token: credentialResponse.credential,
+    });
+
+    if (error) {
+      console.error('Google Login Error with Supabase:', error);
+      setError(error.message || 'Failed to login with Google via Supabase');
+      setLoading(false);
+      return;
+    }
+
+    // Also exchange the Google ID token at our gateway to get a backend JWT
     try {
-      const idToken = credentialResponse.credential;
-      
-      const response = await fetch('http://localhost:8000/auth/google', {
+      const gwBase = import.meta.env.VITE_GATEWAY_API_URL || 'http://localhost:8000';
+      const res = await fetch(`${gwBase.replace(/\/$/, '')}/auth/google`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ idToken }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken: credentialResponse.credential }),
       });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.message || JSON.stringify(body));
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to login with Google');
+      // Gateway may return the token under `accessToken` or `token`
+      const backendToken = body.token || body.accessToken || body.access_token;
+      if (backendToken) {
+        localStorage.setItem('backend_token', backendToken);
+        // try to store email from supabase session if available
+        const sess = await supabase.auth.getSession();
+        if (sess && sess.data && sess.data.session && sess.data.session.user && sess.data.session.user.email) {
+          localStorage.setItem('backend_user_email', sess.data.session.user.email);
+        }
       }
 
-      // Assuming the backend sends back a custom JWT in the 'token' field
-      localStorage.setItem('jwt_token', data.token); 
-      navigate('/'); 
-    } catch (err) {
-      console.error('Google Login Error:', err);
-      setError(err.message || 'Failed to login with Google');
+      navigate('/');
+    } catch (e) {
+      console.error('Failed to exchange ID token at gateway:', e);
+      setError(e.message || 'Failed to obtain backend token from gateway');
     }
+    
     setLoading(false);
   };
 
@@ -97,7 +121,6 @@ function Login() {
             console.log('Login Failed');
             setError('Google Login Failed. Please try again.');
           }}
-          use
         />
       </div>
       <p style={{ marginTop: '20px', textAlign: 'center' }}>
