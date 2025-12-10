@@ -227,44 +227,57 @@ Gateway Service kini memiliki dokumentasi API interaktif.
 
 ---
 
-## 7. Kubernetes / K8s (Advanced / Bonus)
+## 7. Deployment dengan Kubernetes (Docker Desktop)
 
-Folder `k8s/` telah disesuaikan dengan standar tugas kuliah (menggunakan `NodePort` dan `ConfigMap`).
+Bagian ini adalah panduan lengkap deployment menggunakan **Kubernetes bawaan Docker Desktop**.
 
-### Langkah-langkah (Local via Minikube):
+### A. Prasyarat
+1.  **Docker Desktop** terinstal.
+2.  Enable Kubernetes di: `Settings` -> `Kubernetes` -> `Enable Kubernetes`.
+3.  Tunggu hingga indikator hijau: "Kubernetes Running".
 
-1.  **Start Minikube**:
-    ```bash
-    minikube start
-    ```
+### B. Langkah Deployment
+*Jalankan perintah ini di PowerShell sebagai Administrator di folder project.*
 
-2.  **Point Shell ke Minikube Docker Env** (PENTING! Agar minikube bisa baca image docker kita):
-    *   **PowerShell**: `minikube -p minikube docker-env --shell powershell | Invoke-Expression`
-    *   **CMD**: `@FOR /f "tokens=*" %i IN ('minikube -p minikube docker-env --shell cmd') DO @%i`
-
-3.  **Build Image di dalam Minikube**:
-    (Anda harus build ulang image agar masuk ke registry Minikube)
-    ```bash
+1.  **Build Image**:
+    ```powershell
     docker-compose build
     ```
+    *(Penting agar K8s mengenali image lokal Anda)*
 
-4.  **Siapkan Konfigurasi**:
-    *   Edit `k8s/secrets.yaml` (isi kredensial Supabase Anda).
-    *   Apply config:
-        ```bash
-        kubectl apply -f k8s/configmap.yaml
-        kubectl apply -f k8s/secrets.yaml
-        ```
+2.  **Setup Config & Secret**:
+    ```powershell
+    kubectl apply -f k8s/configmap.yaml
+    kubectl apply -f k8s/secrets.yaml
+    ```
 
-5.  **Deploy Aplikasi**:
-    ```bash
+3.  **Deploy Aplikasi**:
+    ```powershell
     kubectl apply -f k8s/
     ```
 
-6.  **Akses Aplikasi**:
-    Karena menggunakan `NodePort`, aplikasi bisa diakses di IP Minikube port 30001 (Gateway) dan 30002 (Frontend).
-    ```bash
-    minikube service frontend-dashboard --url
-    minikube service gateway-service --url
+4.  **Cek Status**:
+    ```powershell
+    kubectl get pods
     ```
-    Atau buka langsung di browser: `http://localhost:30002` (jika menggunakan Docker Driver/Tunneling).
+    *Tunggu hingga semua status `Running`.*
+
+### C. Akses Aplikasi
+- **Frontend**: http://localhost:30002
+- **Gateway**: http://localhost:30001
+
+### D. Uji Coba Self-Healing (Backup Otomatis)
+Kubernetes akan otomatis menghidupkan server yang mati.
+(bisa juga kalo di docker langsung tinggal matiin terus otomatis ada server baru)
+1.  Cek Pod: `kubectl get pods` (Lihat nama pod stock-service).
+2.  Matikan Paksa: `kubectl delete pod stock-service-xxxx`
+3.  Cek Lagi: `kubectl get pods`
+4.  **Hasil**: Pod lama hilang, pod baru langsung muncul otomatis.
+
+### E. Cara Update Codingan (Tanpa Matikan Server)
+Jika Anda mengubah kode:
+1.  `docker-compose build`
+2.  `kubectl rollout restart deployment`
+
+### F. Uninstall / Stop
+`kubectl delete -f k8s/`
