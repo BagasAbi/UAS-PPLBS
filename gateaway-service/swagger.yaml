@@ -216,7 +216,7 @@ paths:
   # --- PREDICTION SERVICE ---
   /api/predict:
     post:
-      summary: Prediksi Permintaan Produk (AI)
+      summary: Prediksi Permintaan Produk (AI V2)
       tags: [AI Prediction]
       security:
         - bearerAuth: []
@@ -226,12 +226,60 @@ paths:
             schema:
               type: object
               properties:
-                product_line:
-                  type: string
-                  example: "Health and beauty"
+                product_id:
+                  type: integer
+                  example: 1
       responses:
         200:
           description: Prediction results (7 days)
+
+  # --- RESTOCK SERVICE ---
+  /api/restock:
+    post:
+      summary: Cek Keputusan Restock
+      tags: [Stock]
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                product_id:
+                  type: integer
+                current_stock:
+                  type: integer
+                predicted_demand:
+                  type: integer
+      responses:
+        200:
+          description: Keputusan Restock (ORDER dengan Jumlah, atau OK)
+
+    # --- STOCK MOVEMENTS ---
+  /api/stock/move:
+    post:
+      summary: Catat Pergerakan Stok (Masuk/Keluar)
+      tags: [Stock]
+      security:
+         - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                product_id:
+                  type: integer
+                qty_change:
+                  type: integer
+                  description: "Positif untuk menambah (Restock), Negatif untuk mengurangi (Adjustment/Loss)"
+                reason:
+                  type: string
+                  example: "Manual Restock"
+      responses:
+        201:
+          description: Pergerakan stok berhasil dicatat
 
 components:
   securitySchemes:

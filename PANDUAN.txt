@@ -5,81 +5,68 @@ Dokumen ini berisi langkah-langkah detail untuk menjalankan dan menguji proyek A
 
 1. PERSIAPAN LINGKUNGAN (Environment Variables)
 -----------------------------------------------
-Sebelum menjalankan, pastikan setiap service memiliki file .env dengan kredensial Supabase Anda. Anda perlu mendapatkan SUPABASE_URL dan SUPABASE_KEY dari dashboard Supabase Anda.
+Sebelum menjalankan, pastikan setiap service memiliki file .env dengan kredensial Supabase Anda.
 
 Buat file .env di setiap folder service berikut:
 
 a. product-service/.env
    PORT=3001
-   SUPABASE_URL=your_supabase_url
-   SUPABASE_KEY=your_supabase_key
+   SUPABASE_URL=...
+   SUPABASE_KEY=...
 
 b. sales-service/.env
    PORT=4000
-   SUPABASE_URL=your_supabase_url
-   SUPABASE_KEY=your_supabase_key
+   SUPABASE_URL=...
+   SUPABASE_KEY=...
    STOCK_SERVICE_URL=http://localhost:3002
 
 c. stock-service/.env
    PORT=3002
-   SUPABASE_URL=your_supabase_url
-   SUPABASE_KEY=your_supabase_key
+   SUPABASE_URL=...
+   SUPABASE_KEY=...
 
 d. prediction-service/.env
-   SUPABASE_URL=your_supabase_url
-   SUPABASE_KEY=your_supabase_key
+   SUPABASE_URL=...
+   SUPABASE_KEY=...
 
-e. gateaway-service/.env
+e. restock-service/.env
+   # Opsional (saat ini tidak butuh env khusus)
+
+f. gateaway-service/.env
    PORT=8000
    FRONTEND_URL=http://localhost:5173
    PRODUCT_SERVICE_URL=http://localhost:3001
    SALES_SERVICE_URL=http://localhost:4000
    STOCK_SERVICE_URL=http://localhost:3002
    PREDICTION_SERVICE_URL=http://localhost:5000
+   RESTOCK_SERVICE_URL=http://localhost:6000
 
 ---
 
 2. LANGKAH-LANGKAH MENJALANKAN (Cara Manual / Lokal)
 ----------------------------------------------------
-Anda perlu membuka 6 Terminal yang berbeda (satu untuk setiap service).
+Anda perlu membuka **7 Terminal** yang berbeda.
 
-Terminal 1: Gateway Service
-   > cd "gateaway-service"
-   > npm install
-   > node server.js
-   (Berjalan di: http://localhost:8000)
+Terminal 1: Gateway Service (http://localhost:8000)
+   > cd gateaway-service && npm install && node server.js
 
-Terminal 2: Prediction Service (AI)
-   > cd "prediction-service"
-   > python -m venv venv
-   > venv\Scripts\activate   (Windows)
-   > pip install -r requirements.txt
-   > python app.py
-   (Berjalan di: http://localhost:5000)
+Terminal 2: Prediction Service (http://localhost:5000)
+   > cd prediction-service && venv\Scripts\activate && python app.py
 
-Terminal 3: Product Service
-   > cd "product-service"
-   > npm install
-   > node server.js
-   (Berjalan di: http://localhost:3001)
+Terminal 3: Product Service (http://localhost:3001)
+   > cd product-service && npm install && node server.js
 
-Terminal 4: Sales Service
-   > cd "sales-service"
-   > npm install
-   > npm start
-   (Berjalan di: http://localhost:4000)
+Terminal 4: Sales Service (http://localhost:4000)
+   > cd sales-service && npm install && npm start
 
-Terminal 5: Stock Service
-   > cd "stock-service"
-   > npm install
-   > npm start
-   (Berjalan di: http://localhost:3002)
+Terminal 5: Stock Service (http://localhost:3002)
+   > cd stock-service && npm install && npm start
 
-Terminal 6: Frontend Dashboard
-   > cd "frontend-dashboard"
-   > npm install
-   > npm run dev
-   (Berjalan di: http://localhost:5173)
+Terminal 6: Restock Service (http://localhost:6000)
+   > cd restock-service && pip install -r requirements.txt && python app.py
+
+Terminal 7: Frontend Dashboard (http://localhost:5173)
+   > cd frontend-dashboard && npm install && npm run dev
 
 ---
 
@@ -88,16 +75,21 @@ Terminal 6: Frontend Dashboard
 
 A. Testing via Browser (Manual Test UI)
    1. Buka browser ke: http://localhost:5173
-   2. Login dan coba fitur dashboard.
+   2. Login sesuai peran:
+      - Manager: Akses penuh (termasuk AI & Edit Stok).
+      - Staff: Akses Penjualan.
+      - User: Hanya lihat produk.
+   3. Coba fitur "Kelola Stok", input ID Produk yang valid (lihat di tabel).
 
 B. Testing via Postman (Integration Test)
    Gunakan URL Gateway (http://localhost:8000).
 
    Contoh URL:
-   - Login: POST http://localhost:8000/login
-   - Produk: GET http://localhost:8000/api/products
-   - Stok: GET http://localhost:8000/api/stock
-   - Prediksi: POST http://localhost:8000/api/predict
+   - Login: POST /login
+   - Produk: GET /api/products
+   - Stok: GET /api/stock
+   - Prediksi (AI): POST /api/predict (Body: { "product_id": 1 })
+   - Restock Decision: POST /api/restock
 
 ---
 

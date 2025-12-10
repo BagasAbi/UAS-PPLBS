@@ -5,11 +5,12 @@ Dokumen ini berisi langkah-langkah detail untuk menjalankan dan menguji proyek A
 ## 1. Status Proyek vs Persyaratan
 
 Berdasarkan analisis struktur folder, proyek Anda **SANGAT SESUAI** dengan ketentuaan tugas akhir PPLBS:
-- **SOA/Microservices**: Terpisah menjadi Gateway, Product, Sales, Stock, dan Prediction service.
-- **AI Integration**: Ada `prediction-service` dengan Python/Flask.
-- **REST API**: Menggunakan Express.js dan Flask.
-- **Frontend**: Menggunakan Vite/React di `frontend-dashboard`.
-- **Database**: Menggunakan Supabase (cloud based).
+- **SOA/Microservices**: Terpisah menjadi Gateway, Product, Sales, Stock, Prevention, dan Restock service.
+- **AI Integration**: Ada `prediction-service` V2 dengan Python/FastAPI (Random Forest).
+- **REST API**: Menggunakan Express.js dan Flask/FastAPI.
+- **Frontend**: Menggunakan Vite/React di `frontend-dashboard` dengan UI yang sudah diindonesiakan.
+- **Database**: Menggunakan Supabase (cloud based) sebagai Single Source of Truth.
+- **Role-Based Access**: Mendukung peran User, Staff, dan Manager.
 
 **Rekomendasi:** Tes semua fitur di **lokal (localhost)** terlebih dahulu untuk memastikan logika bisnis berjalan lancar sebelum masuk ke tahap deployment dengan Docker/Kubernetes.
 
@@ -52,7 +53,10 @@ SUPABASE_URL=your_supabase_url
 SUPABASE_KEY=your_supabase_key
 ```
 
-### e. `gateaway-service/.env`
+### e. `restock-service/.env`
+(Optional, jika dibutuhkan kedepannya)
+
+### f. `gateaway-service/.env`
 ```env
 PORT=8000
 FRONTEND_URL=http://localhost:5173
@@ -60,13 +64,14 @@ PRODUCT_SERVICE_URL=http://localhost:3001
 SALES_SERVICE_URL=http://localhost:4000
 STOCK_SERVICE_URL=http://localhost:3002
 PREDICTION_SERVICE_URL=http://localhost:5000
+RESTOCK_SERVICE_URL=http://localhost:6000
 ```
 
 ---
 
 ## 3. Langkah-Langkah Menjalankan (Local Port)
 
-Anda perlu membuka **6 Terminal** yang berbeda (satu untuk setiap service).
+Anda perlu membuka **7 Terminal** yang berbeda (satu untuk setiap service).
 
 ### Terminal 1: Gateway Service
 ```bash
@@ -76,7 +81,7 @@ node server.js
 ```
 *Berjalan di: `http://localhost:8000`*
 
-### Terminal 2: Prediction Service (AI)
+### Terminal 2: Prediction Service (AI V2)
 ```bash
 cd "c:\semester 7\service\UAS\AI-Inventory-System\prediction-service"
 # Buat venv jika belum ada
@@ -112,7 +117,16 @@ npm start
 ```
 *Berjalan di: `http://localhost:3002`*
 
-### Terminal 6: Frontend Dashboard
+### Terminal 6: Restock Service
+```bash
+cd "c:\semester 7\service\UAS\AI-Inventory-System\restock-service"
+# Gunakan venv yang sama atau buat baru
+pip install -r requirements.txt
+python app.py
+```
+*Berjalan di: `http://localhost:6000`*
+
+### Terminal 7: Frontend Dashboard
 ```bash
 cd "c:\semester 7\service\UAS\AI-Inventory-System\frontend-dashboard"
 npm install
@@ -127,21 +141,25 @@ npm run dev
 ### A. Testing via Browser (Manual Test UI)
 1. Buka browser (Chrome/Edge).
 2. Kunjungi: `http://localhost:5173`.
-3. Coba fitur-fitur yang ada di dashboard, seperti melihat stok, melakukan transaksi penjualan, atau melihat prediksi.
-4. Pastikan Frontend berhasil mengambil data. Jika error, cek console browser (F12) dan terminal Gateway Service.
+3. **Login sesuai Role**:
+   - **User**: Hanya melihat Data Produk.
+   - **Staff**: Bisa melihat Data Produk + Panel "Kelola Stok" (Penjualan).
+   - **Manager**: Akses Penuh (Data Produk, Kelola Stok (Jual/Restock), Analisis AI + Eksekusi Order).
+4. Coba fitur **"Kelola Stok"** untuk menambah (Restock) atau mengurangi (Penjualan) stok.
+5. Coba fitur **"Analisis AI"** (Manager only) dengan memasukkan ID Produk. Jika rekomendasi muncul, klik **"Eksekusi Order"**.
 
 ### B. Testing via Postman (Integration Test)
-Gunakan URL Gateway (`http://localhost:8000`) sebagai pintu masuk. Jangan tembak service langsung kecuali debugging.
+Gunakan URL Gateway (`http://localhost:8000`) sebagai pintu masuk.
 
 **Contoh Request:**
 
-1.  **Cek Prediksi (AI Service)**
+1.  **Cek Prediksi (AI Service V2)**
     *   **Method**: `POST`
     *   **URL**: `http://localhost:8000/api/predict`
     *   **Body (JSON)**:
         ```json
         {
-          "product_line": "Health and beauty"
+          "product_id": 1
         }
         ```
 
@@ -149,23 +167,31 @@ Gunakan URL Gateway (`http://localhost:8000`) sebagai pintu masuk. Jangan tembak
     *   **Method**: `GET`
     *   **URL**: `http://localhost:8000/api/products`
 
-3.  **Cek Stok (Stock Service)**
-    *   **Method**: `GET`
-    *   **URL**: `http://localhost:8000/api/stock`
-
-4.  **Input Penjualan (Sales Service)**
+3.  **Cek Keputusan Restock (Restock Service)**
     *   **Method**: `POST`
-    *   **URL**: `http://localhost:8000/api/sales/transaction`
-    *   **Body (JSON)**:
+    *   **URL**: `http://localhost:8000/api/restock`
+    *   **Body**:
         ```json
         {
-          "product_name": "Contoh Produk",
-          "quantity": 5,
-          "sales_person": "Budi"
+            "product_id": 1,
+            "current_stock": 10,
+            "predicted_demand": 50
         }
         ```
 
-Selamat mencoba! Jika semua berjalan lancar di lokal, Anda bisa mencoba fitur advanced berikut yang sudah saya siapkan:
+4.  **Update Stok Manual (Stock Service)**
+    *   **Method**: `POST`
+    *   **URL**: `http://localhost:8000/api/stock/move`
+    *   **Body**:
+        ```json
+        {
+            "product_id": 1,
+            "qty_change": 10,
+            "reason": "Manual Restock"
+        }
+        ```
+
+Selamat mencoba!
 
 ---
 
@@ -186,7 +212,7 @@ Daripada membuka 6 terminal, Anda bisa menjalankan **semua service** dengan SATU
 4. Akses Frontend di `http://localhost:5173`.
 5. Service lain berjalan di dalam container dan saling terhubung secara otomatis.
 
-> **Catatan**: Jika menggunakan Docker, semua `SERVICE_URL` di env akan otomatis menggunakan nama service (misal `http://stock-service:3002`), bukan `localhost`. Ini sudah diatur otomatis di `docker-compose.yml`.
+> **Catatan**: Jika menggunakan Docker, semua `SERVICE_URL` di env akan otomatis menggunakan nama service (misal `http://stock-service:3002`), bukan `localhost`. Ini sudah diatur otomatis di `docker-compose.yml`. Anda akan memiliki **7 Container** berjalan.
 
 ---
 

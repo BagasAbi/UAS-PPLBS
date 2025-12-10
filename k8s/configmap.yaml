@@ -8,6 +8,7 @@ data:
   SALES_SERVICE_URL: "http://sales-service:4000"
   STOCK_SERVICE_URL: "http://stock-service:3002"
   PREDICTION_SERVICE_URL: "http://prediction-service:5000"
+  RESTOCK_SERVICE_URL: "http://restock-service:6000"
   # Gateway URL for Frontend (Browser -> Gateway)
   # Di local K8s (NodePort), ini nanti akan diganti dengan IP Minikube/Node
   # Untuk default kita set localhost dulu

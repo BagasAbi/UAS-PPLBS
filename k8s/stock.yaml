@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: stock-service
-          image: stock-service:latest
+          image: ai-inventory-system-stock-service:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 3002

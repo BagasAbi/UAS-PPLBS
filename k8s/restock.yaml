@@ -1,28 +1,24 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: sales-service
+  name: restock-service
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: sales-service
+      app: restock-service
   template:
     metadata:
       labels:
-        app: sales-service
+        app: restock-service
     spec:
       containers:
-        - name: sales-service
-          image: ai-inventory-system-sales-service:latest
+        - name: restock-service
+          image: ai-inventory-system-restock-service:latest
           imagePullPolicy: IfNotPresent
           ports:
-            - containerPort: 4000
+            - containerPort: 6000
           env:
-            - name: PORT
-              value: "4000"
-            - name: STOCK_SERVICE_URL
-              value: "http://stock-service:3002"
             - name: SUPABASE_URL
               valueFrom:
                 secretKeyRef:
@@ -37,12 +33,12 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: sales-service
+  name: restock-service
 spec:
   selector:
-    app: sales-service
+    app: restock-service
   ports:
     - protocol: TCP
-      port: 4000
-      targetPort: 4000
+      port: 6000
+      targetPort: 6000
   type: ClusterIP

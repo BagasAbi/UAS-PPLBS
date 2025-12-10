@@ -1,6 +1,8 @@
-flask
-supabase
+fastapi
+uvicorn[standard]
 pandas
-scikit-learn
 numpy
-python-dotenv
+scikit-learn==1.6.1
+joblib
+requests
+supabase

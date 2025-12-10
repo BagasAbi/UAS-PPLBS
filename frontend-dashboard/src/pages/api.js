@@ -60,3 +60,88 @@ export const fetchProducts = async () => {
   // Expecting JSON; if the server returned HTML (e.g. dev server index.html), this will throw.
   return response.json();
 };
+
+export const fetchPrediction = async (productId) => {
+  const backendToken = localStorage.getItem('backend_token');
+  if (!backendToken) throw new Error('No backend token found.');
+
+  const gatewayBase = import.meta.env.VITE_GATEWAY_API_URL || 'http://localhost:8000';
+  const response = await fetch(`${gatewayBase.replace(/\/$/, '')}/api/predict`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${backendToken}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ product_id: parseInt(productId) })
+  });
+
+  if (!response.ok) throw new Error('Prediction API failed');
+  return response.json();
+};
+
+export const checkRestock = async (productId, currentStock, predictedDemand) => {
+  const backendToken = localStorage.getItem('backend_token');
+  if (!backendToken) throw new Error('No backend token found.');
+
+  const gatewayBase = import.meta.env.VITE_GATEWAY_API_URL || 'http://localhost:8000';
+  const response = await fetch(`${gatewayBase.replace(/\/$/, '')}/api/restock`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${backendToken}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      product_id: parseInt(productId),
+      current_stock: parseInt(currentStock),
+      predicted_demand: parseInt(predictedDemand)
+    })
+  });
+
+  if (!response.ok) throw new Error('Restock API failed');
+  return response.json();
+};
+
+export const recordSale = async (productId, quantity) => {
+  const backendToken = localStorage.getItem('backend_token');
+  if (!backendToken) throw new Error('No backend token found.');
+
+  const gatewayBase = import.meta.env.VITE_GATEWAY_API_URL || 'http://localhost:8000';
+  const response = await fetch(`${gatewayBase.replace(/\/$/, '')}/api/sales/transaction`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${backendToken}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      product_id: parseInt(productId),
+      quantity_sold: parseInt(quantity),
+      // sales_person is optional or handled by backend token user info if implemented
+      sales_person: 'WebDashboard'
+    })
+  });
+
+  if (!response.ok) throw new Error('Sales transaction failed');
+  return response.json();
+};
+
+export const updateStock = async (productId, qtyChange, reason) => {
+  const backendToken = localStorage.getItem('backend_token');
+  if (!backendToken) throw new Error('No backend token found.');
+
+  const gatewayBase = import.meta.env.VITE_GATEWAY_API_URL || 'http://localhost:8000';
+  const response = await fetch(`${gatewayBase.replace(/\/$/, '')}/api/stock/move`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${backendToken}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      product_id: parseInt(productId),
+      qty_change: parseInt(qtyChange),
+      reason: reason || 'Manual Update'
+    })
+  });
+
+  if (!response.ok) throw new Error('Stock update failed');
+  return response.json();
+};

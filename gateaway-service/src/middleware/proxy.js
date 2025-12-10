@@ -5,7 +5,8 @@ const services = [
     { name: 'products', route: '/api/products', target: process.env.PRODUCT_SERVICE_URL, rewrite: '/products' },
     { name: 'sales', route: '/api/sales', target: process.env.SALES_SERVICE_URL, rewrite: '/sales' },
     { name: 'stock', route: '/api/stock', target: process.env.STOCK_SERVICE_URL, rewrite: '/stock' },
-    { name: 'predict', route: '/api/predict', target: process.env.PREDICTION_SERVICE_URL, rewrite: '/predict' },
+    { name: 'predict', route: '/api/predict', target: process.env.PREDICTION_SERVICE_URL, rewrite: '/ml/forecast' },
+    { name: 'restock', route: '/api/restock', target: process.env.RESTOCK_SERVICE_URL, rewrite: '/restock' },
 ];
 
 const serviceAccessRules = {
@@ -13,6 +14,7 @@ const serviceAccessRules = {
     '/api/sales': ['manager', 'staff', 'user'], // User might need to buy (POST)
     '/api/stock': ['manager', 'staff'],
     '/api/predict': ['manager'],
+    '/api/restock': ['manager', 'staff'],
 };
 
 function createAuthProxyDecorator(allowedRoles) {

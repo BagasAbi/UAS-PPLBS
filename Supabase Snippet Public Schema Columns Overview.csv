@@ -1,0 +1,40 @@
+table_name,column_name,data_type,is_nullable
+products2,id,bigint,NO
+products2,name,text,NO
+products2,unit,text,NO
+products2,current_stock,integer,NO
+products2,price,integer,NO
+stock_movements,id,integer,NO
+stock_movements,product_id,integer,NO
+stock_movements,movement_date,timestamp without time zone,NO
+stock_movements,qty_change,integer,NO
+stock_movements,reason,character varying,NO
+stock_movements,created_at,timestamp without time zone,NO
+supermarket_sales,Invoice ID,text,NO
+supermarket_sales,Branch,text,YES
+supermarket_sales,City,text,YES
+supermarket_sales,Customer type,text,YES
+supermarket_sales,Gender,text,YES
+supermarket_sales,product_line,text,YES
+supermarket_sales,Unit price,double precision,YES
+supermarket_sales,quantity,bigint,YES
+supermarket_sales,Tax 5%,double precision,YES
+supermarket_sales,Sales,double precision,YES
+supermarket_sales,date,text,YES
+supermarket_sales,Time,text,YES
+supermarket_sales,Payment,text,YES
+supermarket_sales,cogs,double precision,YES
+supermarket_sales,gross margin percentage,double precision,YES
+supermarket_sales,gross income,double precision,YES
+supermarket_sales,Rating,double precision,YES
+transactions,id,integer,NO
+transactions,product_id,bigint,YES
+transactions,quantity_sold,integer,NO
+transactions,transaction_date,timestamp without time zone,YES
+transactions,sales_person,character varying,YES
+user,created_at,timestamp with time zone,NO
+user,email,text,NO
+user,role,character varying,NO
+user,id,uuid,NO
+user,name,text,YES
+user,password_hash,text,YES

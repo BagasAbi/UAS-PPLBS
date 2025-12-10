@@ -2,6 +2,7 @@ version: '3.8'
 
 services:
   gateway-service:
+    image: ai-inventory-system-gateway-service:latest
     build: ./gateaway-service
     ports:
       - "8000:8000"
@@ -12,27 +13,43 @@ services:
       - SALES_SERVICE_URL=http://sales-service:4000
       - STOCK_SERVICE_URL=http://stock-service:3002
       - PREDICTION_SERVICE_URL=http://prediction-service:5000
+      - RESTOCK_SERVICE_URL=http://restock-service:6000
     depends_on:
       - product-service
       - sales-service
       - stock-service
       - prediction-service
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
 
   product-service:
+    image: ai-inventory-system-product-service:latest
     build: ./product-service
     ports:
       - "3001:3001"
     env_file:
       - ./product-service/.env
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
 
   stock-service:
+    image: ai-inventory-system-stock-service:latest
     build: ./stock-service
     ports:
       - "3002:3002"
     env_file:
       - ./stock-service/.env
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
 
   sales-service:
+    image: ai-inventory-system-sales-service:latest
     build: ./sales-service
     ports:
       - "4000:4000"
@@ -40,15 +57,35 @@ services:
       - ./sales-service/.env
     environment:
       - STOCK_SERVICE_URL=http://stock-service:3002
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
 
   prediction-service:
+    image: ai-inventory-system-prediction-service:latest
     build: ./prediction-service
     ports:
       - "5000:5000"
     env_file:
       - ./prediction-service/.env
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+
+  restock-service:
+    image: ai-inventory-system-restock-service:latest
+    build: ./restock-service
+    ports:
+      - "6000:6000"
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
 
   frontend-dashboard:
+    image: ai-inventory-system-frontend-dashboard:latest
     build: ./frontend-dashboard
     ports:
       - "5173:5173"
@@ -56,3 +93,7 @@ services:
       - VITE_GATEWAY_API_URL=http://localhost:8000
     volumes:
       - ./frontend-dashboard/src:/app/src
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
