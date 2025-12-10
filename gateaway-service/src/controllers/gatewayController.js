@@ -175,8 +175,8 @@ async function registerUser(req, res) {
         const id = uuidv4();
         const password_hash = await bcrypt.hash(password, 10);
 
-        // Use role from request or default to 'user'
-        const role = req.body.role || 'user';
+        // Force 'user' role for public registration
+        const role = 'user';
 
         // Build payload dynamically so we only send fields that exist.
         const insertPayload = { id, email, password_hash, role };
@@ -216,6 +216,49 @@ async function registerUser(req, res) {
         return res.status(201).json({ success: true, token: backendToken });
     } catch (err) {
         console.error('Register error:', err);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
+}
+
+// Admin-only: Create user with specific role
+async function adminCreateUser(req, res) {
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+
+        const { email, password, name, role } = req.body;
+        if (!email || !password || !role) return res.status(400).json({ message: 'email, password, and role are required.' });
+
+        // Check if user already exists
+        const { data: existingUser } = await supabase
+            .from('user')
+            .select('id')
+            .eq('email', email)
+            .limit(1)
+            .single();
+
+        if (existingUser) {
+            return res.status(400).json({ message: 'User with this email already exists' });
+        }
+
+        const id = uuidv4();
+        const password_hash = await bcrypt.hash(password, 10);
+
+        const insertPayload = { id, email, password_hash, role };
+        if (name) insertPayload.name = name;
+
+        const { error } = await supabase.from('user').insert([insertPayload]);
+
+        if (error) {
+            return res.status(500).json({ message: 'Failed to create user', detail: error.message });
+        }
+
+        // Issue token for the new user (so Admin can give it to them if needed)
+        const token = jwt.sign({ sub: id, email, role }, process.env.BACKEND_JWT_SECRET, { expiresIn: '7d' });
+
+        return res.status(201).json({ success: true, message: 'User created successfully', user: { id, email, role }, token });
+    } catch (err) {
+        console.error('Admin create user error:', err);
         return res.status(500).json({ message: 'Internal server error' });
     }
 }
@@ -286,6 +329,7 @@ module.exports = {
     login,
     handleGoogleLogin,
     registerUser,
+    adminCreateUser,
     me,
     setUserRole,
 };

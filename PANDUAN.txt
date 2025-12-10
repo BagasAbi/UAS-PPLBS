@@ -106,15 +106,16 @@ Langkah:
 
 ---
 
-5. KUBERNETES (K8s) - Opsional / Advanced
------------------------------------------
-Folder k8s/ telah disiapkan untuk deployment di Minikube menggunakan NodePort.
+5. KUBERNETES (K8s) - Via Docker Desktop
+------------------------------------------
+Folder k8s/ telah disiapkan untuk deployment menggunakan Kubernetes bawaan Docker Desktop.
 
-Langkah (Minikube):
-1. minikube start
-2. minikube -p minikube docker-env --shell powershell | Invoke-Expression
-3. docker-compose build
-4. kubectl apply -f k8s/configmap.yaml
-5. Edit & apply secrets: kubectl apply -f k8s/secrets.yaml
-6. Deploy app: kubectl apply -f k8s/
-7. Akses via IP Minikube port 30001 (Gateway) atau 30002 (Frontend).
+Langkah:
+1. Pastikan "Enable Kubernetes" dicentang di Settings Docker Desktop.
+2. Buka terminal di folder proyek.
+3. Build image: docker-compose build
+4. Apply Config: kubectl apply -f k8s/configmap.yaml
+5. Apply Secret: kubectl apply -f k8s/secrets.yaml
+6. Deploy App: kubectl apply -f k8s/
+7. Cek Status: kubectl get pods
+8. Akses Frontend: http://localhost:30002

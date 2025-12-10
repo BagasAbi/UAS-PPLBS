@@ -21,11 +21,18 @@ router.post('/auth/google', gatewayController.handleGoogleLogin);
 router.post('/register', registerLimiter, [
 	body('email').isEmail().withMessage('Valid email required'),
 	body('password').isLength({ min: 6 }).withMessage('Password min 6 characters'),
-	body('role').optional().isIn(['user', 'staff', 'manager']).withMessage('Invalid role'),
+	// Role is removed/ignored here
 ], gatewayController.registerUser);
 
 // Protected user info endpoint
 router.get('/me', verifyBackendToken, gatewayController.me);
+
+// Admin endpoint: Create user with role (Postman Only usually)
+router.post('/admin/users', verifyBackendToken, requireRole('admin'), [
+	body('email').isEmail(),
+	body('password').isLength({ min: 6 }),
+	body('role').isIn(['admin', 'manager', 'staff', 'user'])
+], gatewayController.adminCreateUser);
 
 // Admin endpoint: change user's role
 router.patch('/users/:id/role', verifyBackendToken, requireRole('admin'), [
